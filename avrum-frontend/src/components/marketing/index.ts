@@ -1,0 +1,13 @@
+export { SiteHeader } from "./site-header";
+export { SiteFooter } from "./site-footer";
+export { Hero } from "./hero";
+export { ProductPreview } from "./product-preview";
+export { TrustedBy } from "./trusted-by";
+export { FeaturesGrid } from "./features-grid";
+export { ProductsSection } from "./products-section";
+export { HowItWorks } from "./how-it-works";
+export { Stats } from "./stats";
+export { Testimonials } from "./testimonials";
+export { Faq } from "./faq";
+export { Newsletter } from "./newsletter";
+export { SectionHeading } from "./section-heading";
