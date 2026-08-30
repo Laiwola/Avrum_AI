@@ -1,6 +1,7 @@
 import * as React from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, UserPlus } from "lucide-react";
+import { AxiosError } from "axios";
 
 import {
   AuthAlert,
@@ -16,6 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signUpSchema, toFieldErrors, type FieldErrors } from "@/lib/auth-validation";
+import { authService } from "@/lib/auth-service";
 
 const TITLE = "Create your account — AVRUM AI";
 const DESCRIPTION =
@@ -40,7 +42,7 @@ function SignUpPage() {
   const [password, setPassword] = React.useState("");
   const [terms, setTerms] = React.useState(false);
 
-  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const parsed = signUpSchema.safeParse({
@@ -59,11 +61,33 @@ function SignUpPage() {
 
     setErrors({});
     setLoading(true);
-    // Frontend only: no backend call yet.
-    window.setTimeout(() => {
-      setLoading(false);
+
+    try {
+      await authService.register({
+        fullName: parsed.data.fullName,
+        organisation: parsed.data.organisation,
+        email: parsed.data.email,
+        password: parsed.data.password,
+        confirmPassword: parsed.data.confirmPassword,
+      });
+
+      // Redirect to email verification page with email parameter
       navigate({ to: "/verify-email", search: { email: parsed.data.email } });
-    }, 900);
+    } catch (error) {
+      setLoading(false);
+      const axiosError = error as AxiosError<any>;
+      const errorData = axiosError.response?.data;
+
+      if (axiosError.response?.status === 409) {
+        setErrors({ email: "An account with this email already exists" });
+      } else if (errorData?.message) {
+        setErrors({ form: errorData.message });
+      } else if (axiosError.message) {
+        setErrors({ form: axiosError.message });
+      } else {
+        setErrors({ form: "Registration failed. Please try again." });
+      }
+    }
   }
 
   return (

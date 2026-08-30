@@ -41,8 +41,8 @@ function AccountCreatedPage() {
       footer={
         <>
           Prefer to explore first?{" "}
-          <Link to="/help" className="font-semibold text-primary hover:underline">
-            Visit the help centre
+          <Link to="/" className="font-semibold text-primary hover:underline">
+            Visit the home page
           </Link>
         </>
       }
@@ -71,7 +71,7 @@ function AccountCreatedPage() {
             </Link>
           </Button>
           <Button variant="outline" size="lg" block asChild>
-            <Link to="/dashboard">Skip to dashboard</Link>
+            <Link to="/">Skip to home</Link>
           </Button>
         </div>
       </div>

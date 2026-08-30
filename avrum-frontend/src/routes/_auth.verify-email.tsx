@@ -1,9 +1,14 @@
 import * as React from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { MailCheck, RefreshCw } from "lucide-react";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
 
 import { AuthAlert, AuthCard, AuthIllustration } from "@/components/auth";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { authService } from "@/lib/auth-service";
+import { useAuth } from "@/components/auth/auth-provider";
 
 const TITLE = "Verify your email — AVRUM AI";
 const DESCRIPTION =
@@ -28,9 +33,13 @@ export const Route = createFileRoute("/_auth/verify-email")({
 function VerifyEmailPage() {
   const { email } = Route.useSearch();
   const navigate = useNavigate();
+  const { setUser } = useAuth();
+  const [verificationCode, setVerificationCode] = React.useState("");
   const [resending, setResending] = React.useState(false);
+  const [verifying, setVerifying] = React.useState(false);
   const [cooldown, setCooldown] = React.useState(0);
   const [resent, setResent] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (cooldown <= 0) return;
@@ -38,15 +47,54 @@ function VerifyEmailPage() {
     return () => window.clearTimeout(id);
   }, [cooldown]);
 
-  function resend() {
+  async function resend() {
+    if (!email) {
+      setError("Email address not found. Please try signing up again.");
+      return;
+    }
+
     setResending(true);
     setResent(false);
-    // Frontend only: no backend call yet.
-    window.setTimeout(() => {
-      setResending(false);
+    setError(null);
+
+    try {
+      await authService.resendVerificationEmail(email);
       setResent(true);
       setCooldown(45);
-    }, 900);
+      toast.success("Verification email sent again. It can take a minute to arrive.");
+    } catch (err) {
+      const axiosError = err as AxiosError<any>;
+      const errorMsg = axiosError.response?.data?.message || "Failed to resend verification email";
+      setError(errorMsg);
+    } finally {
+      setResending(false);
+    }
+  }
+
+  async function verify() {
+    if (!email || !verificationCode.trim()) {
+      setError("Please enter the verification code");
+      return;
+    }
+
+    setVerifying(true);
+    setError(null);
+
+    try {
+      const response = await authService.verifyEmail({
+        email,
+        code: verificationCode.trim(),
+      });
+
+      setUser(response.user);
+      navigate({ to: "/account-created" });
+    } catch (err) {
+      const axiosError = err as AxiosError<any>;
+      const errorMsg = axiosError.response?.data?.message || "Invalid verification code";
+      setError(errorMsg);
+    } finally {
+      setVerifying(false);
+    }
   }
 
   return (
@@ -55,12 +103,12 @@ function VerifyEmailPage() {
       description={
         email ? (
           <>
-            We sent a confirmation link to{" "}
-            <span className="font-semibold text-foreground">{email}</span>. Click it to activate your
+            We sent a confirmation code to{" "}
+            <span className="font-semibold text-foreground">{email}</span>. Enter it below to activate your
             AVRUM AI account.
           </>
         ) : (
-          "We sent a confirmation link to your inbox. Click it to activate your AVRUM AI account."
+          "We sent a confirmation code to your inbox. Enter it below to activate your AVRUM AI account."
         )
       }
       footer={
@@ -75,6 +123,8 @@ function VerifyEmailPage() {
       <div className="space-y-6">
         <AuthIllustration icon={MailCheck} tone="sky" />
 
+        {error && <AuthAlert tone="error">{error}</AuthAlert>}
+
         {resent && (
           <AuthAlert tone="success">
             Confirmation email sent again. It can take a minute to arrive.
@@ -85,6 +135,24 @@ function VerifyEmailPage() {
           Nothing in your inbox? Check spam and promotions, and confirm your organisation allows mail
           from avrum.ai.
         </AuthAlert>
+
+        <div className="space-y-3">
+          <div>
+            <label htmlFor="code" className="block text-sm font-medium mb-1.5">
+              Verification code
+            </label>
+            <Input
+              id="code"
+              name="code"
+              type="text"
+              placeholder="Enter 6-digit code"
+              value={verificationCode}
+              onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              maxLength={6}
+              inputMode="numeric"
+            />
+          </div>
+        </div>
 
         <div className="space-y-2">
           <Button
@@ -106,9 +174,10 @@ function VerifyEmailPage() {
             variant="ai"
             size="lg"
             block
-            onClick={() => navigate({ to: "/account-created" })}
+            loading={verifying}
+            onClick={verify}
           >
-            I've confirmed my email
+            {verifying ? "Verifying…" : "Verify email"}
           </Button>
         </div>
       </div>

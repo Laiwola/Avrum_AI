@@ -1,3 +1,4 @@
+import "dotenv/config.js";
 import { loadEnvironment } from "./config/env.js";
 import { connectDatabase, disconnectDatabase } from "./config/database.js";
 import { createApp } from "./app.js";

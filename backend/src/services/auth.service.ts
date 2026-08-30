@@ -35,6 +35,35 @@ function parseFullName(fullName: string) {
   return { firstName, lastName };
 }
 
+export function normalizeFarmOwnershipType(value?: unknown): "individual" | "cooperative" | "commercial" | "government" | "ngo" {
+  switch (value) {
+    case "cooperative":
+      return "cooperative";
+    case "government":
+      return "government";
+    case "ngo":
+      return "ngo";
+    case "leased":
+    case "managed":
+      return "commercial";
+    case "family":
+    case "owned":
+    default:
+      return "individual";
+  }
+}
+
+export function normalizeFarmSizeUnit(value?: unknown): "hectares" | "acres" | "plots" {
+  switch (value) {
+    case "acres":
+    case "plots":
+      return value;
+    case "hectares":
+    default:
+      return "hectares";
+  }
+}
+
 function roleFromUserType(userType?: string): "farmer" | "agronomist" | "cooperative_lead" | "developer" | "admin" {
   switch (userType) {
     case "agronomist":
@@ -123,9 +152,16 @@ export async function registerUser(input: {
   try {
     await sendVerificationEmail(email, verificationCode);
   } catch (error) {
-    await User.deleteOne({ _id: user._id });
-    await VerificationToken.deleteOne({ _id: verificationToken._id });
-    throw error;
+    const env = getEnv();
+    // In development, log the error but continue; in production, roll back
+    if (env.NODE_ENV === "production") {
+      await User.deleteOne({ _id: user._id });
+      await VerificationToken.deleteOne({ _id: verificationToken._id });
+      throw error;
+    } else {
+      // Development: log error but allow registration to proceed
+      console.warn("⚠️  Email delivery failed in development mode, but user was created. Error:", error instanceof Error ? error.message : String(error));
+    }
   }
 
   return {
@@ -155,6 +191,38 @@ export async function verifyEmail(input: { email: string; code: string }) {
   await user.save();
 
   return await createAuthenticatedSession(user, "email_verification");
+}
+
+export async function resendVerificationEmail(input: { email: string }) {
+  const user = await User.findOne({ email: input.email.trim().toLowerCase() });
+  if (!user) {
+    throw new NotFoundError("User");
+  }
+
+  if (user.emailVerified) {
+    throw new ValidationError("Email address is already verified");
+  }
+
+  // Generate new verification code
+  const verificationCode = generateOtpCode();
+  user.verificationCode = verificationCode;
+  user.verificationCodeExpiresAt = new Date(Date.now() + 1000 * 60 * 10);
+  await user.save();
+
+  // Delete old verification tokens
+  await VerificationToken.deleteMany({ userId: user._id, type: "email_verification" });
+
+  // Create new verification token
+  await VerificationToken.create({
+    userId: user._id,
+    token: verificationCode,
+    type: "email_verification",
+    expiresAt: new Date(Date.now() + 1000 * 60 * 10),
+  });
+
+  await sendVerificationEmail(user.email, verificationCode);
+
+  return { ok: true };
 }
 
 export async function loginUser(input: { email: string; password: string; remember?: boolean }, metadata: { userAgent: string; ipAddress: string }) {
@@ -427,6 +495,8 @@ export async function completeOnboarding(userId: string, payload: Record<string,
           : `${currentUser.firstName || "My"} Farm`;
 
       const farmSize = Number(mergedData.farmSize ?? 0);
+      const farmSizeUnit = normalizeFarmSizeUnit(mergedData.sizeUnit);
+      const farmOwnershipType = normalizeFarmOwnershipType(mergedData.ownership);
       const createdFarm: any = (
         await Farm.create(
           [
@@ -440,8 +510,8 @@ export async function completeOnboarding(userId: string, payload: Record<string,
                 town: typeof mergedData.town === "string" ? mergedData.town : "",
               },
               size: Number.isFinite(farmSize) ? farmSize : 0,
-              sizeUnit: typeof mergedData.sizeUnit === "string" && (mergedData.sizeUnit === "acres" || mergedData.sizeUnit === "hectares") ? mergedData.sizeUnit : "hectares",
-              ownershipType: typeof mergedData.ownership === "string" ? mergedData.ownership as "individual" | "cooperative" | "commercial" | "government" | "ngo" : "individual",
+              sizeUnit: farmSizeUnit,
+              ownershipType: farmOwnershipType,
               crops: Array.isArray(mergedData.crops) ? mergedData.crops.filter((item): item is string => typeof item === "string") : [],
             },
           ],

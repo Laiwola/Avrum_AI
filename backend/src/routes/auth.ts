@@ -15,6 +15,7 @@ import {
   refreshToken,
   registerUser,
   resetPassword,
+  resendVerificationEmail,
   verifyEmail,
 } from "../services/auth.service.js";
 import { getRequestContext } from "../services/auth.service.js";
@@ -45,6 +46,16 @@ router.post("/verify-email", async (req: Request, res: Response, next: NextFunct
     const body = validateBody(verifyEmailSchema, req);
     const result = await verifyEmail(body);
     res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/resend-verification-email", async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const body = validateBody(z.object({ email: z.string().email() }), req);
+    await resendVerificationEmail(body);
+    res.status(204).send();
   } catch (error) {
     next(error);
   }

@@ -25,7 +25,8 @@ export function createApp(): express.Application {
   // Middleware: CORS
   app.use(
     cors({
-      origin: env.CORS_ALLOWED_ORIGINS,
+      // origin: env.CORS_ALLOWED_ORIGINS,
+      origin:"*",
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],

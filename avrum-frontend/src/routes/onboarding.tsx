@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { AxiosError } from "axios";
 import {
   Bell,
   Building2,
@@ -51,6 +52,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Toaster } from "@/components/ui/sonner";
+import { onboardingService } from "@/lib/auth-service";
+import { useAuth } from "@/components/auth/auth-provider";
 
 const TITLE = "Set up your farm — AVRUM AI";
 const DESCRIPTION =
@@ -173,8 +176,11 @@ function OnboardingPage() {
 
 function OnboardingWizard() {
   const navigate = useNavigate();
+  const { setUser } = useAuth();
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Draft>(INITIAL_DRAFT);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((prev) => ({ ...prev, [key]: value }));
@@ -186,6 +192,29 @@ function OnboardingWizard() {
         ? prev[key].filter((item) => item !== value)
         : [...prev[key], value],
     }));
+
+  // Auto-save draft when it changes
+  useEffect(() => {
+    const saveTimer = setTimeout(async () => {
+      if (step > 0 && step < STEPS.length - 1) {
+        setIsSaving(true);
+        try {
+          await onboardingService.saveDraft({
+            step,
+            data: draft,
+          });
+          setLastSaved(new Date());
+        } catch (error) {
+          const axiosError = error as AxiosError<any>;
+          console.error("Failed to save draft:", axiosError);
+        } finally {
+          setIsSaving(false);
+        }
+      }
+    }, 1000);
+
+    return () => clearTimeout(saveTimer);
+  }, [draft, step]);
 
   const isLast = step === STEPS.length - 1;
 
@@ -214,19 +243,45 @@ function OnboardingWizard() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const goNext = () => {
+  const goNext = async () => {
     if (isLast) {
-      toast.success("Setup complete", { description: "Your workspace is ready." });
-      void navigate({ to: "/dashboard" });
+      // Complete onboarding
+      try {
+        const response = await onboardingService.complete({
+          draft,
+          data: draft,
+        });
+        setUser(response.user);
+        toast.success("Setup complete", { description: "Your workspace is ready." });
+        void navigate({ to: "/dashboard" });
+      } catch (error) {
+        const axiosError = error as AxiosError<any>;
+        toast.error("Failed to complete onboarding", {
+          description: axiosError.response?.data?.message || "Please try again",
+        });
+      }
       return;
     }
     setStep((value) => value + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const saveAndContinue = () => {
-    toast.success("Progress saved", { description: "You can resume this setup anytime." });
-    goNext();
+  const saveAndContinue = async () => {
+    // Save current step before continuing
+    try {
+      await onboardingService.saveDraft({
+        step,
+        data: draft,
+      });
+      setLastSaved(new Date());
+      toast.success("Progress saved", { description: "You can resume this setup anytime." });
+      goNext();
+    } catch (error) {
+      const axiosError = error as AxiosError<any>;
+      toast.error("Failed to save progress", {
+        description: axiosError.response?.data?.message || "Please try again",
+      });
+    }
   };
 
   return (
@@ -576,7 +631,7 @@ function OnboardingWizard() {
       </div>
 
       <div className="mt-6 flex items-center justify-between gap-3">
-        <AutosaveIndicator signal={draft} />
+        <AutosaveIndicator signal={isSaving ? new Date() : lastSaved} />
         {!isLast && (
           <Link
             to="/dashboard"

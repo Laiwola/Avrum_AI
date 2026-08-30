@@ -1,6 +1,7 @@
 import * as React from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, LogIn } from "lucide-react";
+import { AxiosError } from "axios";
 
 import { AuthAlert, AuthCard, AuthField, OAuthProviders, PasswordInput } from "@/components/auth";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signInSchema, toFieldErrors, type FieldErrors } from "@/lib/auth-validation";
+import { authService } from "@/lib/auth-service";
+import { useAuth } from "@/components/auth/auth-provider";
 
 const TITLE = "Sign in — AVRUM AI";
 const DESCRIPTION =
@@ -28,11 +31,12 @@ export const Route = createFileRoute("/_auth/sign-in")({
 
 function SignInPage() {
   const navigate = useNavigate();
+  const { setUser } = useAuth();
   const [errors, setErrors] = React.useState<FieldErrors>({});
   const [loading, setLoading] = React.useState(false);
   const [remember, setRemember] = React.useState(true);
 
-  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const parsed = signInSchema.safeParse({
@@ -48,11 +52,39 @@ function SignInPage() {
 
     setErrors({});
     setLoading(true);
-    // Frontend only: no backend call yet.
-    window.setTimeout(() => {
+
+    try {
+      const response = await authService.login({
+        email: parsed.data.email,
+        password: parsed.data.password,
+        remember: parsed.data.remember,
+      });
+
+      setUser(response.user);
+
+      // Check if onboarding is complete
+      if (response.user.onboardingCompleted) {
+        navigate({ to: "/dashboard" });
+      } else {
+        navigate({ to: "/onboarding" });
+      }
+    } catch (error) {
       setLoading(false);
-      navigate({ to: "/dashboard" });
-    }, 900);
+      const axiosError = error as AxiosError<any>;
+      const errorData = axiosError.response?.data;
+
+      if (axiosError.response?.status === 400 || axiosError.response?.status === 401) {
+        setErrors({ form: errorData?.message || "Invalid email or password" });
+      } else if (axiosError.response?.status === 422) {
+        setErrors({ form: "Email address has not been verified yet" });
+      } else if (errorData?.message) {
+        setErrors({ form: errorData.message });
+      } else if (axiosError.message) {
+        setErrors({ form: axiosError.message });
+      } else {
+        setErrors({ form: "Sign in failed. Please try again." });
+      }
+    }
   }
 
   return (

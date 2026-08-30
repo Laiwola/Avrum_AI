@@ -16,21 +16,25 @@ export async function connectDatabase(): Promise<void> {
     const mongoUri = env.MONGODB_URI;
     const dbName = env.MONGODB_DB_NAME;
 
+    console.log("🔌 Attempting to connect to MongoDB...");
+    
     await Promise.race([
       mongoose.connect(mongoUri, {
         dbName,
-        connectTimeoutMS: 3000,
-        socketTimeoutMS: 3000,
+        connectTimeoutMS: 5000,
+        socketTimeoutMS: 10000,
+        serverSelectionTimeoutMS: 5000,
       }),
       new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("MongoDB connection timed out")), 3000);
+        setTimeout(() => reject(new Error("MongoDB connection timeout - connection took too long")), 8000);
       }),
     ]);
 
     isConnected = true;
     console.log("✓ Connected to MongoDB successfully");
   } catch (error) {
-    console.warn("⚠ MongoDB connection unavailable; continuing in degraded startup mode.", error);
+    console.warn("⚠ MongoDB connection unavailable; continuing in degraded startup mode.");
+    console.warn("Error details:", error instanceof Error ? error.message : String(error));
     isConnected = false;
   }
 }

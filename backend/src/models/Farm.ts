@@ -14,7 +14,7 @@ export interface IFarm extends Document {
     };
   };
   size: number;
-  sizeUnit: "hectares" | "acres";
+  sizeUnit: "hectares" | "acres" | "plots";
   ownershipType: "individual" | "cooperative" | "commercial" | "government" | "ngo";
   crops: string[];
   createdAt: Date;
@@ -63,7 +63,7 @@ const farmSchema = new Schema<IFarm>(
     },
     sizeUnit: {
       type: String,
-      enum: ["hectares", "acres"],
+      enum: ["hectares", "acres", "plots"],
       default: "hectares",
     },
     ownershipType: {
