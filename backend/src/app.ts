@@ -5,7 +5,7 @@ import { errorHandler } from "./utils/errors.js";
 import { requestIdMiddleware, requestLoggerMiddleware } from "./middleware/request.js";
 import healthRoutes from "./routes/health.js";
 import authRoutes from "./routes/auth.js";
-import diagnosisRoutes from "./routes/diagnosis";
+import diagnosisRoutes from "./routes/diagnosis.js";
 import meRoutes from "./routes/me.js";
 import onboardingRoutes from "./routes/onboarding.js";
 import { logger } from "./utils/logger.js";
