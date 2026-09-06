@@ -5,6 +5,10 @@ import {
   saveDiagnosis,
 } from "../services/diagnosis.js";
 import { uploadCropImage } from "../services/s3.service.js";
+import {
+  requireAuth,
+  AuthenticatedRequest,
+} from "../middleware/auth.js";
 
 const router = Router();
 
@@ -32,8 +36,11 @@ const upload = multer({
 /**
  * Upload crop image to S3
  */
-router.post("/diagnosis/upload", upload.single("image"), async (req, res, next) => {
+router.post("/diagnosis/upload", upload.single("image"), async (req: AuthenticatedRequest, res, next) => {
   try {
+      if (!req.user) {
+  return res.status(401).json({ message: "Unauthorized access" });
+}
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -42,7 +49,7 @@ router.post("/diagnosis/upload", upload.single("image"), async (req, res, next) 
     }
 
     // const userId = req.user?.id;
-    const userId= req.body.userId || undefined;
+    const userId= req.user._id.toString();
     const result = await uploadCropImage(
       req.file,
       userId
@@ -64,17 +71,21 @@ router.post("/diagnosis/upload", upload.single("image"), async (req, res, next) 
 /**
  * Analyze crop image
  */
-router.post("/diagnosis", async (req, res, next) => {
+router.post("/diagnosis",requireAuth, async (req: AuthenticatedRequest, res, next) => {
   try {
     const { crop, image_url, image_key } = req.body;
-     const userId= "xxxstrtal" 
+    //  const userId= "xxxstrtal" 
+    if (!req.user) {
+  return res.status(401).json({ message: "Unauthorized" });
+}
+    const userId = req.user._id.toString();
     if (!crop || !image_url) {
       return res.status(400).json({
         success: false,
         message: "crop and image_url are required",
       });
     }
-
+    
     // 1. Ask Python AI service to analyze the image
     const diagnosis = await analyzeCropImage(
       crop,
