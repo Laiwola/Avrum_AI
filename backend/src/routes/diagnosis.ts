@@ -36,7 +36,7 @@ const upload = multer({
 /**
  * Upload crop image to S3
  */
-router.post("/diagnosis/upload", upload.single("image"), async (req: AuthenticatedRequest, res, next) => {
+router.post("/diagnosis/upload", requireAuth, upload.single("image"), async (req: AuthenticatedRequest, res, next) => {
   try {
       if (!req.user) {
   return res.status(401).json({ message: "Unauthorized access" });
