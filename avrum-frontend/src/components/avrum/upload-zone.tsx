@@ -9,13 +9,20 @@ export function UploadZone({
   description = "Drag and drop, or browse. JPG or PNG up to 10 MB.",
   className,
   compact = false,
+  onFileSelected,
 }: {
   title?: string;
   description?: string;
   className?: string;
   compact?: boolean;
+  onFileSelected?: (file: File) => void;
 }) {
   const [dragging, setDragging] = React.useState(false);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  const selectFile = (file: File | undefined) => {
+    if (file) onFileSelected?.(file);
+  };
 
   return (
     <div
@@ -27,6 +34,7 @@ export function UploadZone({
       onDrop={(e) => {
         e.preventDefault();
         setDragging(false);
+        selectFile(e.dataTransfer.files[0]);
       }}
       className={cn(
         "flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border-strong bg-card/60 text-center transition-colors",
@@ -40,7 +48,19 @@ export function UploadZone({
       </span>
       <p className="mt-4 text-sm font-bold">{title}</p>
       <p className="mt-1 max-w-sm text-xs text-muted-foreground">{description}</p>
-      <Button variant="outline" size="sm" className="mt-4">Browse files</Button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="sr-only"
+        onChange={(e) => {
+          selectFile(e.target.files?.[0]);
+          e.target.value = "";
+        }}
+      />
+      <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => inputRef.current?.click()}>
+        Browse files
+      </Button>
     </div>
   );
 }

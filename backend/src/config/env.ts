@@ -38,7 +38,7 @@ const envSchema = z.object({
 
   // External Services
   OPENWEATHER_API_KEY: z.string().optional(),
-  AI_SERVICE_URL: z.string().url().default("http://localhost:5000"),
+  AI_SERVICE_URL: z.string().url().default("http://localhost:8000"),
   AI_SERVICE_TOKEN: z.string().optional(),
 
   // Observability
@@ -48,6 +48,8 @@ const envSchema = z.object({
   // Rate Limiting
   RATE_LIMIT_REQUESTS_PER_MINUTE: z.coerce.number().default(1000),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60000),
+  // AI service Port
+
 
   // API Key Management
   API_KEY_HASH_SECRET: z.string().optional(),

@@ -9,5 +9,6 @@ export { HowItWorks } from "./how-it-works";
 export { Stats } from "./stats";
 export { Testimonials } from "./testimonials";
 export { Faq } from "./faq";
+export { Waitlist } from "./waitlist";
 export { Newsletter } from "./newsletter";
 export { SectionHeading } from "./section-heading";

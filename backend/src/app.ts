@@ -5,6 +5,7 @@ import { errorHandler } from "./utils/errors.js";
 import { requestIdMiddleware, requestLoggerMiddleware } from "./middleware/request.js";
 import healthRoutes from "./routes/health.js";
 import authRoutes from "./routes/auth.js";
+import diagnosisRoutes from "./routes/diagnosis";
 import meRoutes from "./routes/me.js";
 import onboardingRoutes from "./routes/onboarding.js";
 import { logger } from "./utils/logger.js";
@@ -56,7 +57,8 @@ export function createApp(): express.Application {
   app.use("/api/v1/auth", authRoutes);
   app.use("/api/v1/me", meRoutes);
   app.use("/api/v1/onboarding", onboardingRoutes);
-
+//  AI service routes
+   app.use("/api", diagnosisRoutes);
   // 404 handler
   app.use((req: Request, res: Response) => {
     res.status(404).json({

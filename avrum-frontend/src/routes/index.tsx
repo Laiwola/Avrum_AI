@@ -12,6 +12,7 @@ import {
   Stats,
   Testimonials,
   TrustedBy,
+  Waitlist,
 } from "@/components/marketing";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -44,6 +45,7 @@ function LandingPage() {
         <Stats />
         <Testimonials />
         <Faq />
+        <Waitlist />
         <Newsletter />
       </main>
       <SiteFooter />
