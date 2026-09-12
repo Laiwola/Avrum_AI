@@ -2,10 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import {
   Faq,
-  FeaturesGrid,
   Hero,
   HowItWorks,
-  Newsletter,
   ProductsSection,
   SiteFooter,
   SiteHeader,
@@ -14,9 +12,11 @@ import {
   TrustedBy,
   Waitlist,
 } from "@/components/marketing";
+
 import { Toaster } from "@/components/ui/sonner";
 
 const TITLE = "AVRUM AI — AI-Powered Agricultural Intelligence";
+
 const DESCRIPTION =
   "AVRUM AI turns crop photos, satellite passes and soil data into timed field decisions: disease diagnosis, spray windows, yield risk and soil plans in one platform.";
 
@@ -29,6 +29,7 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: DESCRIPTION },
     ],
   }),
+
   component: LandingPage,
 });
 
@@ -36,19 +37,27 @@ function LandingPage() {
   return (
     <div className="min-h-svh bg-background">
       <SiteHeader />
+
       <main>
         <Hero />
+
         <TrustedBy />
-        <FeaturesGrid />
+
         <ProductsSection />
+
         <HowItWorks />
+
         <Stats />
+
         <Testimonials />
+
         <Faq />
+
         <Waitlist />
-        <Newsletter />
       </main>
+
       <SiteFooter />
+
       <Toaster position="top-right" />
     </div>
   );
