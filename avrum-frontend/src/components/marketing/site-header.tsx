@@ -7,7 +7,6 @@ import { Logo } from "@/components/layout/logo";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { label: "Platform", href: "#platform" },
   { label: "Products", href: "#products" },
   { label: "How it works", href: "#how-it-works" },
   { label: "Impact", href: "#impact" },

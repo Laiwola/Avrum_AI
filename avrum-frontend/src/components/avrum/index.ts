@@ -7,6 +7,7 @@ export { SearchBox } from "./search-box";
 export { FilterPanel, FilterField } from "./filter-panel";
 export { UploadZone } from "./upload-zone";
 export { MapPlaceholder } from "./map-placeholder";
+export { IndexLayerMap } from "./index-layer-map";
 export { DataTable, type Column } from "./data-table";
 export { LoadingSpinner, CardSkeleton, TableSkeleton } from "./loading";
 export { SettingsCard, SettingsRow, SettingsRowGroup, SettingsField } from "./settings-card";
