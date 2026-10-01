@@ -1,0 +1,10 @@
+0000000000000000000000000000000000000000 87050d696853d3fc3877df0d56dd2c4e0568d370 laiwola <layiibrahim32@gmail.com> 1788085899 +0100	commit (initial): first commit
+87050d696853d3fc3877df0d56dd2c4e0568d370 b7da9699b28a5361bd12ff9d0a0eedb77564569c laiwola <layiibrahim32@gmail.com> 1788105510 +0100	commit: second commit -implementation
+b7da9699b28a5361bd12ff9d0a0eedb77564569c 3343d1173d692952ff270499bf3785825611692e laiwola <layiibrahim32@gmail.com> 1788105859 +0100	commit: amend-env-file
+3343d1173d692952ff270499bf3785825611692e c414804bb783f7f9b3cdef55a86d4df72f1cabb0 laiwola <layiibrahim32@gmail.com> 1788107986 +0100	commit: config fixed
+c414804bb783f7f9b3cdef55a86d4df72f1cabb0 0ce2b6716be2b7cb12dc65de08efe618c901cfa8 laiwola <layiibrahim32@gmail.com> 1788109879 +0100	commit: Fix backend deployment configuration
+0ce2b6716be2b7cb12dc65de08efe618c901cfa8 6114a66370f56aeb3f3aa7426f3c43d6dae241a9 laiwola <layiibrahim32@gmail.com> 1788693255 +0100	commit: ai service functionality and changes made to backend added
+6114a66370f56aeb3f3aa7426f3c43d6dae241a9 fdb6cba781ddb7e5c099b566a64489f659a7dfcf laiwola <layiibrahim32@gmail.com> 1788695262 +0100	commit: backend modification added
+fdb6cba781ddb7e5c099b566a64489f659a7dfcf 46190fb833e63888f5b99722db2b6a0197dba844 laiwola <layiibrahim32@gmail.com> 1788701086 +0100	commit: fix the req auth issue
+46190fb833e63888f5b99722db2b6a0197dba844 d258b02c53f5c3ca448608617d0cb0a2826b5285 laiwola <layiibrahim32@gmail.com> 1788702335 +0100	commit: fix the req auth issue
+d258b02c53f5c3ca448608617d0cb0a2826b5285 140c5c4f87a78ea58e2c37c6f2ff6d2c683da1f0 laiwola <layiibrahim32@gmail.com> 1788702689 +0100	commit: changes in model name
